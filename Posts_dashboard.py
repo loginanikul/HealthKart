@@ -4,6 +4,7 @@ import dash
 from dash import dcc, html, dash_table
 import plotly.express as px
 import plotly.graph_objects as go
+from datetime import datetime
 
 # Database configuration
 username = 'root'
@@ -20,6 +21,7 @@ engine = create_engine(
 # Fetch posts data from database
 with engine.connect() as conn:
     posts_df = pd.read_sql(text("SELECT * FROM posts"), conn)
+    print(posts_df.head(1))
 
 # Convert date column
 if 'date' in posts_df.columns:
@@ -58,11 +60,12 @@ platform_fig = px.pie(
 # Timeline
 if 'date' in posts_df.columns:
     time_series_df = posts_df.set_index('date').resample('D').size().reset_index(name='count')
+    today_str = datetime.today().strftime('%B %d, %Y')
     timeline_fig = px.line(
         time_series_df,
         x='date',
         y='count',
-        title='Daily Post Activity',
+        title=(f'Daily Post Activity of {today_str}'),
         labels={'date': 'Date', 'count': 'Number of Posts'}
     )
 else:
@@ -76,12 +79,12 @@ top_posts_df = posts_df.sort_values('total_engagement', ascending=False).head(10
 
 # Layout
 app.layout = html.Div([
-    html.H1("Posts Tracking Dashboard by Anirudha", style={'textAlign': 'center' }),
+    html.H1("Posts Tracking Dashboard by Anirudha & Ani's AI", style={'textAlign': 'center' }),
     
     html.Div([
         html.Div([
             html.Div(f"{len(posts_df)}", style={'fontSize': '2.5rem', 'fontWeight': 'bold'}),
-            html.Div("Total Posts", style={'fontSize': '1rem'})
+            html.Div("Total Posts", style={'fontSize': '1rem' ,  'background-color': ''})
         ], className='kpi-card'),
         
         html.Div([
@@ -143,7 +146,7 @@ app.layout = html.Div([
         style_data_conditional=[{'if': {'row_index': 'odd'}, 'backgroundColor': 'rgb(248, 248, 248)'}],
         tooltip_data=[{col: {'value': str(val), 'type': 'markdown'} for col, val in row.items()} for row in posts_df.to_dict('records')],
         tooltip_duration=None,
-        page_size=15,
+        page_size=300,
         filter_action='native',
         sort_action='native'
     )
